@@ -1,6 +1,5 @@
 // === CONFIGURATION ===
-// Must match the exact same Apps Script URL you used in app.js
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbz4n6syDLljV5zGTvfFaIwS9bp6kYij43GKvRdfT5iv2ZoExEHbcEhu1OLAzVx31IM7/exec';
+const GAS_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
 const MODEL_URL = './models'; 
 
 const video = document.getElementById('admin-video');
@@ -11,7 +10,6 @@ const captureStatus = document.getElementById('capture-status');
 
 let currentEmbedding = null;
 
-// 1. Initialize and load models
 async function init() {
   await Promise.all([
     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
@@ -24,7 +22,6 @@ async function init() {
   startVideo();
 }
 
-// 2. Start Camera
 async function startVideo() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
@@ -35,7 +32,6 @@ async function startVideo() {
   }
 }
 
-// 3. Scan face and extract descriptor
 captureBtn.addEventListener('click', async () => {
   captureBtn.innerText = "Scanning...";
   captureBtn.disabled = true;
@@ -44,24 +40,21 @@ captureBtn.addEventListener('click', async () => {
   const displaySize = { width: video.videoWidth, height: video.videoHeight };
   faceapi.matchDimensions(canvas, displaySize);
 
-  // Detect face
   const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
     .withFaceLandmarks()
     .withFaceDescriptor();
 
   if (detections) {
-    // Draw box around face to show success
     const resizedDetections = faceapi.resizeResults(detections, displaySize);
     canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     faceapi.draw.drawDetections(canvas, resizedDetections);
 
-    // Convert Float32Array to standard JavaScript Array for JSON stringification
     currentEmbedding = Array.from(detections.descriptor);
     
     captureStatus.innerText = "Face Captured Successfully!";
     captureStatus.classList.add('success');
     captureStatus.classList.remove('error');
-    submitBtn.disabled = false; // Enable form submission
+    submitBtn.disabled = false; 
     captureBtn.innerText = "Rescan Face";
   } else {
     canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
@@ -72,7 +65,6 @@ captureBtn.addEventListener('click', async () => {
   captureBtn.disabled = false;
 });
 
-// 4. Submit form and embedding to Google Sheets
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   
@@ -124,5 +116,4 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// Start application
 window.onload = init;
