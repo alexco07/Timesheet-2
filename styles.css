@@ -1,0 +1,133 @@
+:root {
+  --primary: #1976D2;
+  --bg-color: #E3F2FD;
+  --success: #43A047;
+  --danger: #EF5350;
+  --warning: #F57C00;
+  --white: #FFFFFF;
+  --text-main: #333333;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-color);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  text-align: center;
+  width: 100%;
+  max-width: 900px;
+  padding: 20px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.welcome-text {
+  font-size: 3rem;
+  color: var(--text-main);
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 40px;
+}
+
+/* Button Layout */
+.button-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  justify-items: center;
+}
+
+.btn-large {
+  width: 280px;
+  height: 120px;
+  border-radius: 16px;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--white);
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-transform: uppercase;
+}
+
+.btn-large:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-primary { background-color: var(--primary); }
+.btn-danger { background-color: var(--danger); }
+.btn-warning { background-color: var(--warning); }
+.btn-success { background-color: var(--success); }
+.btn-secondary {
+  background-color: #757575;
+  color: white;
+  padding: 15px 40px;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+/* Video Container */
+.video-container {
+  position: relative;
+  display: inline-block;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  background: #000;
+}
+
+video {
+  display: block;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#status-message {
+  margin-top: 20px;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--primary);
+}
+
+/* Success Card */
+.card {
+  background: var(--white);
+  padding: 50px;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.success-text {
+  color: var(--success);
+  font-size: 2rem;
+  margin: 10px 0;
+}
+
+.time-text {
+  font-size: 3rem;
+  font-weight: bold;
+  color: var(--text-main);
+  margin: 20px 0;
+}
