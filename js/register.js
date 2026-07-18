@@ -7,7 +7,7 @@ let currentDescriptor = null;
 async function initRegistration() {
   try {
     // Updated to use the absolute model repository URL
-    const MODEL_URL = 'https://alexco07.github.io/face-api-models/';
+    const MODEL_URL = 'https://alexco07.github.io/alexco07/models/';
     await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
     await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
     await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
