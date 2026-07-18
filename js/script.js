@@ -1,11 +1,12 @@
 // Initialize the application
 const video = document.getElementById('video');
 
-// Load models from the /models folder at the root of your repo
+// Load models from the remote model repository
 async function loadModels() {
-    await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-    await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+    const MODEL_URL = 'https://alexco07.github.io/face-api-models/';
+    await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
     console.log("Models loaded successfully");
 }
 
@@ -37,7 +38,7 @@ video.addEventListener('play', () => {
 });
 
 // Run initialization
-(async () => {
+document.addEventListener('DOMContentLoaded', async () => {
     await loadModels();
     await startVideo();
-})();
+});
