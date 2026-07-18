@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Reports</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <h1>System Reports</h1>
+    <div class="links">
+      <a href="admin.html">Admin</a>
+      <a href="index.html">Kiosk</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <button class="btn btn-secondary" onclick="loadLogs()" style="margin-bottom: 20px;">Refresh Logs</button>
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>Log ID</th>
+          <th>Emp ID</th>
+          <th>Name</th>
+          <th>Action</th>
+          <th>Date</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody id="logs-body">
+        <tr><td colspan="6" style="text-align:center;">Loading logs...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/reports.js"></script>
+</body>
+</html>
