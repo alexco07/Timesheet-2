@@ -6,14 +6,16 @@ let currentDescriptor = null;
 
 async function initRegistration() {
   try {
-    await faceapi.nets.ssdMobilenetv1.loadFromUri('./models');
-    await faceapi.nets.faceLandmark68Net.loadFromUri('./models');
-    await faceapi.nets.faceRecognitionNet.loadFromUri('./models');
+    // Updated to use the absolute model repository URL
+    const MODEL_URL = 'https://alexco07.github.io/face-api-models/';
+    await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
     
     regStatus.innerText = "Looking for face...";
     startVideo();
   } catch(e) {
-    regStatus.innerText = "Error loading models.";
+    regStatus.innerText = "Error loading models: " + e.message;
   }
 }
 
