@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Biometric Kiosk</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <style>
+    body { font-family: 'Roboto', sans-serif; background-color: #E3F2FD; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .card { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; max-width: 800px; width: 90%; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+    button { height: 120px; border-radius: 16px; font-size: 24px; font-weight: bold; color: white; cursor: pointer; border: none; }
+    .btn-success { background: #43A047; } .btn-danger { background: #EF5350; } .btn-primary { background: #1976D2; }
+    video { width: 100%; border-radius: 12px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+  <div class="card" id="main-menu">
+    <h1 id="sys-status">Loading AI Engine...</h1>
+    <div class="grid">
+      <button class="btn-success" onclick="startFlow('Clock In')" disabled id="btn-in">CLOCK IN</button>
+      <button class="btn-danger" onclick="startFlow('Clock Out')" disabled id="btn-out">CLOCK OUT</button>
+      <button class="btn-primary" onclick="startFlow('Break Start')" disabled id="btn-bs">START BREAK</button>
+      <button class="btn-primary" onclick="startFlow('Break End')" disabled id="btn-be">END BREAK</button>
+    </div>
+  </div>
+
+  <div class="card" id="camera-view" style="display:none;">
+    <h2 id="action-title">Authenticating...</h2>
+    <video id="video" autoplay muted></video>
+    <p id="status-msg">Please look at the camera.</p>
+  </div>
+
+  <script>
+    // ⚠️ PASTE YOUR GOOGLE DEPLOYMENT URL HERE
+    const API_URL = "YOUR_NEW_APPS_SCRIPT_URL_HERE"; 
+    const MODEL_URL = "https://alexco07.github.io/Timesheet-2/models";
+    
+    let faceMatcher = null;
+    let currentAction = "";
+
+    async function callBackend(functionName, payload) {
+      const res = await fetch(API_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ functionName, payload })
+      });
+      return (await res.json()).data;
+    }
+
+    window.onload = async () => {
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+      ]);
+      
+      const employees = await callBackend('getEmployeeData', {});
+      const descriptors = employees.map(emp => 
+        new faceapi.LabeledFaceDescriptors(emp.EmployeeID + '||' + emp.Name, [new Float32Array(emp.FaceEmbedding)])
+      );
+      
+      faceMatcher = new faceapi.FaceMatcher(descriptors, 0.45);
+      
+      document.getElementById('sys-status').innerText = "Select an action to begin";
+      document.querySelectorAll('button').forEach(b => b.disabled = false);
+    };
+
+    async function startFlow(action) {
+      currentAction = action;
+      document.getElementById('main-menu').style.display = 'none';
+      document.getElementById('camera-view').style.display = 'block';
+      document.getElementById('action-title').innerText = action;
+
+      const video = document.getElementById('video');
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+
+      const scanInterval = setInterval(async () => {
+        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+        if (detection) {
+          clearInterval(scanInterval);
+          const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+          if (bestMatch.label !== 'unknown') {
+            stream.getTracks().forEach(t => t.stop());
+            const [empId, empName] = bestMatch.label.split('||');
+            document.getElementById('status-msg').innerText = `Logging ${empName}...`;
+            
+            const res = await callBackend('logPunch', { empId, action, confidence: bestMatch.distance, deviceInfo: {userAgent: navigator.userAgent} });
+            document.getElementById('status-msg').innerHTML = `<h2 style="color:#43A047">Success! ${res.time}</h2>`;
+            setTimeout(() => location.reload(), 3000);
+          } else {
+            document.getElementById('status-msg').innerText = "Not recognized. Try again.";
+            setTimeout(() => startFlow(action), 2000);
+          }
+        }
+      }, 500);
+    }
+  </script>
+</body>
+</html>
