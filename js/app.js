@@ -12,10 +12,12 @@ let detectionInterval;
 async function initKiosk() {
   try {
     statusMsg.innerText = "Loading face models...";
-    // Ensure you have these files in your repository's /models folder
-    await faceapi.nets.ssdMobilenetv1.loadFromUri('./models');
-    await faceapi.nets.faceLandmark68Net.loadFromUri('./models');
-    await faceapi.nets.faceRecognitionNet.loadFromUri('./models');
+    
+    // Updated to use the absolute model repository URL
+    const MODEL_URL = 'https://alexco07.github.io/face-api-models/';
+    await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
 
     statusMsg.innerText = "Fetching employees from database...";
     const res = await callAPI('getEmployees');
