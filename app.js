@@ -11,6 +11,7 @@ const statusElement =
     document.getElementById('status');
 
 let modelsLoaded = false;
+
 let modelsLoading = false;
 
 
@@ -44,32 +45,30 @@ async function loadModels() {
 
     }
 
+
     if (modelsLoading) {
 
         return;
 
     }
 
+
     modelsLoading =
         true;
 
+
     try {
+
 
         setStatus(
             'Loading face detection model...'
         );
 
+
         await faceapi.nets.tinyFaceDetector.loadFromUri(
+
             MODEL_URL
-        );
 
-
-        setStatus(
-            'Loading face landmark model...'
-        );
-
-        await faceapi.nets.faceLandmark68Net.loadFromUri(
-            MODEL_URL
         );
 
 
@@ -77,41 +76,69 @@ async function loadModels() {
             'Loading face recognition model...'
         );
 
+
         await faceapi.nets.faceRecognitionNet.loadFromUri(
+
             MODEL_URL
+
         );
 
 
         modelsLoaded =
             true;
 
+
         modelsLoading =
             false;
 
+
         setStatus(
+
             'Models loaded successfully. Start the camera.'
+
         );
 
+
         console.log(
-            'All face recognition models loaded successfully.'
+
+            'Face detection model loaded.'
+
         );
+
+
+        console.log(
+
+            'Face recognition model loaded.'
+
+        );
+
 
     } catch (error) {
 
+
         modelsLoading =
             false;
+
 
         modelsLoaded =
             false;
 
+
         console.error(
+
             'MODEL LOADING ERROR:',
+
             error
+
         );
 
+
         setStatus(
+
             'Error loading face recognition models.'
+
         );
+
 
     }
 
@@ -126,50 +153,73 @@ async function startCamera() {
 
     try {
 
+
         setStatus(
+
             'Starting camera...'
+
         );
 
 
         const stream =
+
             await navigator.mediaDevices.getUserMedia({
 
-                video: true,
+                video:
 
-                audio: false
+                    true,
+
+
+                audio:
+
+                    false
 
             });
 
 
         video.srcObject =
+
             stream;
 
 
         video.onloadedmetadata =
+
             () => {
+
 
                 video.play();
 
 
                 setStatus(
+
                     'Camera ready. Look at the camera.'
+
                 );
+
 
             };
 
 
     } catch (error) {
 
+
         console.error(
+
             'CAMERA ERROR:',
+
             error
+
         );
 
 
         setStatus(
+
             'Camera error: ' +
+
             error.message
+
         );
+
 
     }
 
@@ -185,8 +235,11 @@ async function getFaceDescriptor() {
 
     if (!modelsLoaded) {
 
+
         setStatus(
+
             'Face recognition models are still loading...'
+
         );
 
 
@@ -198,44 +251,50 @@ async function getFaceDescriptor() {
 
     if (!video.srcObject) {
 
+
         throw new Error(
+
             'Please start the camera first.'
+
         );
+
 
     }
 
 
     setStatus(
+
         'Detecting face...'
+
     );
 
 
     const detection =
 
-        await faceapi
+        await faceapi.detectSingleFace(
 
-            .detectSingleFace(
+            video,
 
-                video,
+            new faceapi.TinyFaceDetectorOptions({
 
-                new faceapi.TinyFaceDetectorOptions({
+                inputSize:
 
-                    inputSize:
-                        416,
+                    416,
 
-                    scoreThreshold:
-                        0.5
 
-                })
+                scoreThreshold:
 
-            )
+                    0.5
 
-            .withFaceLandmarks()
+            })
 
-            .withFaceDescriptor();
+        )
+
+        .withFaceDescriptor();
 
 
     if (!detection) {
+
 
         throw new Error(
 
@@ -243,11 +302,14 @@ async function getFaceDescriptor() {
 
         );
 
+
     }
 
 
     setStatus(
+
         'Face detected successfully.'
+
     );
 
 
@@ -266,20 +328,24 @@ async function getFaceDescriptor() {
 
 function waitForModels() {
 
+
     return new Promise(
 
         (resolve, reject) => {
 
 
             const startTime =
+
                 Date.now();
 
 
             const timeout =
+
                 30000;
 
 
             const interval =
+
                 setInterval(
 
                     () => {
@@ -287,11 +353,16 @@ function waitForModels() {
 
                         if (modelsLoaded) {
 
+
                             clearInterval(
+
                                 interval
+
                             );
 
+
                             resolve();
+
 
                             return;
 
@@ -301,28 +372,37 @@ function waitForModels() {
                         if (
 
                             Date.now() -
+
                             startTime >
+
                             timeout
 
                         ) {
 
+
                             clearInterval(
+
                                 interval
+
                             );
+
 
                             reject(
 
                                 new Error(
 
-                                    'Face recognition models could not be loaded.'
+                                    'Face recognition models could not be loaded. Check the model files and path.'
 
                                 )
 
                             );
 
+
                         }
 
+
                     },
+
 
                     100
 
@@ -341,6 +421,7 @@ function waitForModels() {
 
 async function registerFace() {
 
+
     try {
 
 
@@ -349,7 +430,9 @@ async function registerFace() {
             document
 
                 .getElementById(
+
                     'name'
+
                 )
 
                 .value
@@ -362,7 +445,9 @@ async function registerFace() {
             document
 
                 .getElementById(
+
                     'email'
+
                 )
 
                 .value
@@ -372,9 +457,13 @@ async function registerFace() {
 
         if (!name) {
 
+
             alert(
+
                 'Please enter a name.'
+
             );
+
 
             return;
 
@@ -382,7 +471,9 @@ async function registerFace() {
 
 
         setStatus(
+
             'Preparing face recognition...'
+
         );
 
 
@@ -392,7 +483,9 @@ async function registerFace() {
 
 
         setStatus(
+
             'Saving face descriptor...'
+
         );
 
 
@@ -405,6 +498,7 @@ async function registerFace() {
                 {
 
                     method:
+
                         'POST',
 
 
@@ -413,18 +507,22 @@ async function registerFace() {
                         JSON.stringify({
 
                             action:
+
                                 'register',
 
 
                             name:
+
                                 name,
 
 
                             email:
+
                                 email,
 
 
                             descriptor:
+
                                 descriptor
 
                         })
@@ -440,12 +538,19 @@ async function registerFace() {
 
 
         console.log(
+
             'Registration result:',
+
             result
+
         );
 
 
-        if (result.success) {
+        if (
+
+            result.success
+
+        ) {
 
 
             setStatus(
@@ -482,6 +587,7 @@ async function registerFace() {
         setStatus(
 
             'Registration error: ' +
+
             error.message
 
         );
@@ -496,6 +602,7 @@ async function registerFace() {
 ========================================================= */
 
 async function recognizeFace() {
+
 
     try {
 
@@ -521,6 +628,7 @@ async function recognizeFace() {
                 {
 
                     method:
+
                         'POST',
 
 
@@ -529,6 +637,7 @@ async function recognizeFace() {
                         JSON.stringify({
 
                             action:
+
                                 'getFaces'
 
                         })
@@ -543,7 +652,12 @@ async function recognizeFace() {
             await response.json();
 
 
-        if (!result.success) {
+        if (
+
+            !result.success
+
+        ) {
+
 
             throw new Error(
 
@@ -574,10 +688,12 @@ async function recognizeFace() {
 
 
         let bestMatch =
+
             null;
 
 
         let bestDistance =
+
             Infinity;
 
 
@@ -600,16 +716,19 @@ async function recognizeFace() {
                 if (
 
                     distance <
+
                     bestDistance
 
                 ) {
 
 
                     bestDistance =
+
                         distance;
 
 
                     bestMatch =
+
                         face;
 
                 }
@@ -620,6 +739,7 @@ async function recognizeFace() {
 
 
         const MATCH_THRESHOLD =
+
             0.6;
 
 
@@ -628,6 +748,7 @@ async function recognizeFace() {
             bestMatch &&
 
             bestDistance <
+
             MATCH_THRESHOLD
 
         ) {
@@ -642,7 +763,9 @@ async function recognizeFace() {
                 ' | Distance: ' +
 
                 bestDistance.toFixed(
+
                     4
+
                 )
 
             );
@@ -656,7 +779,9 @@ async function recognizeFace() {
                 'No match found. Best distance: ' +
 
                 bestDistance.toFixed(
+
                     4
+
                 )
 
             );
