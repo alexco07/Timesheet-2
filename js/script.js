@@ -1,29 +1,44 @@
-// COMPLETE FUNCTION REPLACEMENT
-// Replace your existing model loading block with this
+// Initialize the application
+const video = document.getElementById('video');
 
-async function loadFaceApiModels() {
-  try {
-    // We are using the JSDelivr CDN approach to avoid CORS and 404 errors.
-    // Notice that we only pass the DIRECTORY path, not the specific JSON file.
-    const MODEL_URL = 'https://cdn.jsdelivr.net/gh/alexco07/Timesheet-2@main/models';
-    
-    console.log('Starting to load face-api.js models...');
-
-    // Load the models concurrently for better performance
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
-      // Add or remove models here depending on what your app uses
-    ]);
-
-    console.log('Successfully loaded all face-api.js models!');
-    
-    // Call the function to start the video or enable the UI here
-    // startVideo(); 
-
-  } catch (error) {
-    console.error('Error loading face-api models:', error);
-    alert('Failed to load face detection models. Please check the console for details.');
-  }
+// Load models from the remote model repository
+async function loadModels() {
+    const MODEL_URL = 'https://alexco07.github.io/alexco07/models/';
+    await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+    console.log("Models loaded successfully");
 }
+
+async function startVideo() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+        video.srcObject = stream;
+    } catch (err) {
+        console.error("Error accessing webcam: ", err);
+    }
+}
+
+video.addEventListener('play', () => {
+    const canvas = faceapi.createCanvasFromMedia(video);
+    document.body.append(canvas);
+    const displaySize = { width: video.width, height: video.height };
+    faceapi.matchDimensions(canvas, displaySize);
+
+    setInterval(async () => {
+        const detections = await faceapi.detectAllFaces(video)
+            .withFaceLandmarks()
+            .withFaceDescriptors();
+        
+        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        faceapi.draw.drawDetections(canvas, resizedDetections);
+        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+    }, 100);
+});
+
+// Run initialization
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadModels();
+    await startVideo();
+});
