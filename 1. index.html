@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timesheet Facial Recognition</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Load face-api.js -->
+  <script defer src="face-api.min.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+
+  <!-- Main Action Menu -->
+  <div id="main-menu" class="container">
+    <h1 class="welcome-text">Welcome</h1>
+    <p class="subtitle">Please select an action</p>
+    
+    <div class="button-grid">
+      <button class="btn-large btn-primary" onclick="startFlow('Clock In')">CLOCK IN</button>
+      <button class="btn-large btn-danger" onclick="startFlow('Clock Out')">CLOCK OUT</button>
+      <button class="btn-large btn-warning" onclick="startFlow('Break Start')">START BREAK</button>
+      <button class="btn-large btn-success" onclick="startFlow('Break End')">END BREAK</button>
+    </div>
+  </div>
+
+  <!-- Camera / Face Recognition Screen -->
+  <div id="camera-screen" class="container hidden">
+    <h2 id="action-title">Clock In</h2>
+    <div class="video-container">
+      <video id="video" width="720" height="560" autoplay muted></video>
+      <canvas id="overlay"></canvas>
+    </div>
+    <div id="status-message">Position your face in the frame...</div>
+    <button class="btn-secondary" onclick="cancelFlow()">CANCEL</button>
+  </div>
+
+  <!-- Success Screen -->
+  <div id="success-screen" class="container hidden">
+    <div class="card">
+      <h2 id="success-name">Welcome Alexander</h2>
+      <h3 id="success-action" class="success-text">Clock In Successful</h3>
+      <p id="success-time" class="time-text">08:01 AM</p>
+      <button class="btn-secondary mt-4" onclick="resetUI()">RETURN</button>
+    </div>
+  </div>
+
+</body>
+</html>
