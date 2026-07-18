@@ -10,75 +10,261 @@ const video =
 const statusElement =
     document.getElementById('status');
 
+let modelsLoaded = false;
+let cameraStarted = false;
 
-async function loadModels() {
 
-    statusElement.innerText =
-        'Loading face recognition models...';
+/* ================================
+   STATUS
+================================ */
 
-    await faceapi.nets.tinyFaceDetector.loadFromUri(
-        MODEL_URL
-    );
+function setStatus(message) {
 
-    await faceapi.nets.faceLandmark68Net.loadFromUri(
-        MODEL_URL
-    );
-
-    await faceapi.nets.faceRecognitionNet.loadFromUri(
-        MODEL_URL
-    );
+    console.log(message);
 
     statusElement.innerText =
-        'Models loaded successfully';
+        message;
 
 }
 
+
+/* ================================
+   LOAD MODELS
+================================ */
+
+async function loadModels() {
+
+    try {
+
+        setStatus(
+            'Loading face detection model...'
+        );
+
+        await faceapi.nets.tinyFaceDetector.loadFromUri(
+            MODEL_URL
+        );
+
+        setStatus(
+            'Loading face landmark model...'
+        );
+
+        await faceapi.nets.faceLandmark68Net.loadFromUri(
+            MODEL_URL
+        );
+
+        setStatus(
+            'Loading face recognition model...'
+        );
+
+        await faceapi.nets.faceRecognitionNet.loadFromUri(
+            MODEL_URL
+        );
+
+        modelsLoaded = true;
+
+        setStatus(
+            'Models loaded successfully. Start the camera.'
+        );
+
+        console.log(
+            'All face recognition models loaded'
+        );
+
+    } catch (error) {
+
+        console.error(
+            'MODEL LOADING ERROR:',
+            error
+        );
+
+        setStatus(
+            'ERROR loading models. Open browser console.'
+        );
+
+    }
+
+}
+
+
+/* ================================
+   START CAMERA
+================================ */
 
 async function startCamera() {
 
     try {
 
+        if (!modelsLoaded) {
+
+            setStatus(
+                'Please wait until the models finish loading.'
+            );
+
+            return;
+
+        }
+
+        setStatus(
+            'Requesting camera permission...'
+        );
+
         const stream =
             await navigator.mediaDevices.getUserMedia({
-                video: true,
+
+                video: {
+
+                    facingMode: 'user',
+
+                    width: {
+                        ideal: 640
+                    },
+
+                    height: {
+                        ideal: 480
+                    }
+
+                },
+
                 audio: false
+
             });
 
-        video.srcObject = stream;
+        video.srcObject =
+            stream;
 
-        statusElement.innerText =
-            'Camera started';
+        await new Promise((resolve) => {
+
+            video.onloadedmetadata =
+                () => {
+
+                    resolve();
+
+                };
+
+        });
+
+        await video.play();
+
+        cameraStarted =
+            true;
+
+        setStatus(
+            'Camera ready. Look at the camera.'
+        );
+
+        console.log(
+            'Video width:',
+            video.videoWidth
+        );
+
+        console.log(
+            'Video height:',
+            video.videoHeight
+        );
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            'CAMERA ERROR:',
+            error
+        );
 
-        statusElement.innerText =
-            'Unable to access camera';
+        setStatus(
+            'Camera error: ' +
+            error.message
+        );
 
     }
 
 }
 
 
+/* ================================
+   GET FACE DESCRIPTOR
+================================ */
+
 async function getFaceDescriptor() {
+
+    if (!modelsLoaded) {
+
+        throw new Error(
+            'Models are not loaded yet.'
+        );
+
+    }
+
+    if (!cameraStarted) {
+
+        throw new Error(
+            'Camera is not started.'
+        );
+
+    }
+
+    if (
+        video.readyState <
+        HTMLMediaElement.HAVE_CURRENT_DATA
+    ) {
+
+        throw new Error(
+            'Video is not ready yet.'
+        );
+
+    }
+
+    if (
+        video.videoWidth === 0 ||
+        video.videoHeight === 0
+    ) {
+
+        throw new Error(
+            'Camera video has no dimensions.'
+        );
+
+    }
+
+    setStatus(
+        'Detecting face...'
+    );
+
+    console.log(
+        'Starting face detection...'
+    );
 
     const detection =
         await faceapi
             .detectSingleFace(
+
                 video,
-                new faceapi.TinyFaceDetectorOptions()
+
+                new faceapi.TinyFaceDetectorOptions({
+
+                    inputSize: 320,
+
+                    scoreThreshold: 0.5
+
+                })
+
             )
             .withFaceLandmarks()
             .withFaceDescriptor();
 
+    console.log(
+        'Detection result:',
+        detection
+    );
+
     if (!detection) {
 
         throw new Error(
-            'No face detected'
+            'No face detected. Move closer and face the camera.'
         );
 
     }
+
+    setStatus(
+        'Face detected successfully.'
+    );
 
     return Array.from(
         detection.descriptor
@@ -87,110 +273,145 @@ async function getFaceDescriptor() {
 }
 
 
+/* ================================
+   REGISTER FACE
+================================ */
+
 async function registerFace() {
 
     try {
 
         const name =
-            document.getElementById('name')
+            document
+                .getElementById('name')
                 .value
                 .trim();
 
         const email =
-            document.getElementById('email')
+            document
+                .getElementById('email')
                 .value
                 .trim();
 
         if (!name) {
 
             alert(
-                'Please enter a name'
+                'Please enter a name.'
             );
 
             return;
 
         }
 
-        statusElement.innerText =
-            'Detecting face...';
-
         const descriptor =
             await getFaceDescriptor();
 
-        statusElement.innerText =
-            'Saving face...';
+        setStatus(
+            'Saving face descriptor...'
+        );
 
         const response =
-            await fetch(API_URL, {
+            await fetch(
 
-                method: 'POST',
+                API_URL,
 
-                body: JSON.stringify({
+                {
 
-                    action: 'register',
+                    method: 'POST',
 
-                    name: name,
+                    body: JSON.stringify({
 
-                    email: email,
+                        action:
+                            'register',
 
-                    descriptor: descriptor
+                        name:
+                            name,
 
-                })
+                        email:
+                            email,
 
-            });
+                        descriptor:
+                            descriptor
+
+                    })
+
+                }
+
+            );
 
         const result =
             await response.json();
 
+        console.log(
+            'Registration result:',
+            result
+        );
+
         if (result.success) {
 
-            statusElement.innerText =
-                'Face registered successfully';
+            setStatus(
+                'Face registered successfully!'
+            );
 
         } else {
 
-            statusElement.innerText =
-                result.message;
+            throw new Error(
+                result.message
+            );
 
         }
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            'REGISTRATION ERROR:',
+            error
+        );
 
-        statusElement.innerText =
-            error.message;
+        setStatus(
+            'Registration error: ' +
+            error.message
+        );
 
     }
 
 }
 
 
+/* ================================
+   RECOGNIZE FACE
+================================ */
+
 async function recognizeFace() {
 
     try {
 
-        statusElement.innerText =
-            'Detecting face...';
-
         const currentDescriptor =
             await getFaceDescriptor();
 
-        statusElement.innerText =
-            'Loading registered faces...';
+        setStatus(
+            'Loading registered faces...'
+        );
 
         const response =
-            await fetch(API_URL, {
+            await fetch(
 
-                method: 'POST',
+                API_URL,
 
-                body: JSON.stringify({
+                {
 
-                    action: 'getFaces'
+                    method: 'POST',
 
-                })
+                    body: JSON.stringify({
 
-            });
+                        action:
+                            'getFaces'
+
+                    })
+
+                }
+
+            );
 
         const result =
             await response.json();
@@ -203,69 +424,104 @@ async function recognizeFace() {
 
         }
 
-        if (result.faces.length === 0) {
+        if (
+            result.faces.length === 0
+        ) {
 
-            statusElement.innerText =
-                'No registered faces found';
+            setStatus(
+                'No registered faces found.'
+            );
 
             return;
 
         }
 
-        let bestMatch = null;
+        let bestMatch =
+            null;
 
-        let bestDistance = Infinity;
+        let bestDistance =
+            Infinity;
 
-        result.faces.forEach(face => {
+        result.faces.forEach(
 
-            const distance =
-                faceapi.euclideanDistance(
-                    currentDescriptor,
-                    face.descriptor
-                );
+            face => {
 
-            if (distance < bestDistance) {
+                const distance =
+                    faceapi.euclideanDistance(
 
-                bestDistance =
-                    distance;
+                        currentDescriptor,
 
-                bestMatch =
-                    face;
+                        face.descriptor
+
+                    );
+
+                if (
+                    distance <
+                    bestDistance
+                ) {
+
+                    bestDistance =
+                        distance;
+
+                    bestMatch =
+                        face;
+
+                }
 
             }
 
-        });
+        );
 
         const MATCH_THRESHOLD =
             0.6;
 
         if (
+
             bestMatch &&
-            bestDistance < MATCH_THRESHOLD
+            bestDistance <
+            MATCH_THRESHOLD
+
         ) {
 
-            statusElement.innerText =
-                `Match found: ${bestMatch.name}
-                Distance: ${bestDistance.toFixed(4)}`;
+            setStatus(
+
+                'MATCH FOUND: ' +
+                bestMatch.name +
+                ' | Distance: ' +
+                bestDistance.toFixed(4)
+
+            );
 
         } else {
 
-            statusElement.innerText =
-                `No match found.
-                Best distance: ${bestDistance.toFixed(4)}`;
+            setStatus(
+
+                'No match found. Best distance: ' +
+                bestDistance.toFixed(4)
+
+            );
 
         }
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            'RECOGNITION ERROR:',
+            error
+        );
 
-        statusElement.innerText =
-            error.message;
+        setStatus(
+            'Recognition error: ' +
+            error.message
+        );
 
     }
 
 }
 
+
+/* ================================
+   START
+================================ */
 
 loadModels();
