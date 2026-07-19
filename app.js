@@ -267,16 +267,15 @@ async function registerFace() {
         const averageDescriptor = averageFaceDescriptors(descriptors);
         setStatus('Saving face profile...');
 
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-                action: 'register',
-                name: name,
-                email: email,
-                descriptor: averageDescriptor
-            })
-        });
+         const response = await fetch(API_URL,{
+             method:"POST",
+             mode:"cors",
+             redirect:"follow",
+             headers:{
+                 "Content-Type":"text/plain;charset=utf-8"
+            },
+             body:JSON.stringify(data)
+});
 
         const result = await response.json();
         console.log('Registration result:', result);
