@@ -275,6 +275,11 @@ async function registerFace() {
                  "Content-Type":"text/plain;charset=utf-8"
             },
              body:JSON.stringify(data)
+                 action: "register",
+                 name: name,
+                 email: email,
+                 descriptor: averageDescriptor
+    })
 });
 
         const result = await response.json();
