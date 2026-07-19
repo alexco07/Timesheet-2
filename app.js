@@ -151,6 +151,11 @@ async function loadModels() {
 
         );
 
+        // Required for descriptor extraction
+        await faceapi.nets.faceLandmark68Net.loadFromUri(
+            MODEL_URL
+        );
+
 
         modelsLoaded =
             true;
@@ -695,7 +700,7 @@ async function getFaceDescriptor() {
                 })
 
             )
-
+            .withFaceLandmarks() // FIX: Landmarks required before descriptors
             .withFaceDescriptor();
 
 
@@ -831,7 +836,7 @@ async function captureMultipleFaceDescriptors() {
                     })
 
                 )
-
+                .withFaceLandmarks() // FIX: Landmarks required before descriptors
                 .withFaceDescriptor();
 
 
