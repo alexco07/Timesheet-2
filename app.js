@@ -1,7 +1,7 @@
 /* =========================================================
    CONFIGURATION
 ========================================================= */
-const API_URL = 'https://script.google.com/macros/s/AKfycbwBIoPttZR_stBYRxw79rYI743HYTo2cyfaNjcKkLFizGKvajJ4u4ln0sPv82QQrXAU/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzF5wHjpS2JhgVydZnSFWc0-D9rR-F_XTBw01notxBcP7HffpF365vwhaDXtRTytcJ9/exec';
 const MODEL_URL = './models';
 
 /* =========================================================
