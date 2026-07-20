@@ -267,16 +267,22 @@ async function registerFace() {
         const averageDescriptor = averageFaceDescriptors(descriptors);
         setStatus('Saving face profile...');
 
-         const response = await fetch(API_URL,{
-             method:"POST",
-             mode:"cors",
-             redirect:"follow",
-             headers:{
-                 "Content-Type":"text/plain;charset=utf-8"
+        const data = {
+            action: 'register',
+            name: name,
+            email: email,
+            descriptor: averageDescriptor
+        };
+
+        const response = await fetch(API_URL, {
+            method: "POST",
+            mode: "cors",
+            redirect: "follow",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
             },
-             body:JSON.stringify(data)
-                
-});
+            body: JSON.stringify(data)
+        });
 
         const result = await response.json();
         console.log('Registration result:', result);
@@ -354,6 +360,66 @@ async function recognizeFace() {
     } catch (error) {
         console.error('RECOGNITION ERROR:', error);
         setStatus('Recognition error: ' + error.message);
+    }
+}
+
+/* =========================================================
+   CLOCK IN / OUT WITH PHOTO
+========================================================= */
+async function submitClock(type) {
+    try {
+        const pinElement = document.getElementById('pin');
+        const pin = pinElement ? pinElement.value.trim() : '';
+
+        if (!pin) {
+            alert('Please enter your PIN.');
+            return;
+        }
+
+        validateCamera();
+        setStatus('Capturing photo for ' + type + '...');
+
+        // Create a canvas to extract the current video frame as an image
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Compress the image to Base64 (60% JPEG quality to save transmission/storage size)
+        const photoData = canvas.toDataURL('image/jpeg', 0.6);
+
+        setStatus('Saving ' + type + ' record...');
+
+        const payload = {
+            action: 'clockAction',
+            type: type,
+            pin: pin,
+            photo: photoData
+        };
+
+        const response = await fetch(API_URL, {
+            method: "POST",
+            mode: "cors",
+            redirect: "follow",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        console.log('Clock action result:', result);
+
+        if (result.success) {
+            setStatus(type + ' successful for PIN: ' + pin);
+            pinElement.value = ''; // clear the PIN
+        } else {
+            throw new Error(result.message || 'Unable to record ' + type + '.');
+        }
+    } catch (error) {
+        console.error('CLOCK ACTION ERROR:', error);
+        setStatus('Error: ' + error.message);
     }
 }
 
